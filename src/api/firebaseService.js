@@ -1,4 +1,4 @@
-import { db } from '../firebaseConfig';
+import { db } from '../config/firebaseConfig';
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from 'firebase/firestore';
 
 export const fetchAppointments = async () => {

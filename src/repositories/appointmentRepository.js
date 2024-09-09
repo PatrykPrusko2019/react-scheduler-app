@@ -1,21 +1,41 @@
 import * as firebaseService from '../api/firebaseService';
 
-class AppointmentRepository {
+const appointmentRepository = {
   async getAll() {
-    return await firebaseService.fetchAppointments();
-  }
+    try {
+      return await firebaseService.getAppointments();
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+      throw error;
+    }
+  },
 
   async create(appointment) {
-    return await firebaseService.addAppointment(appointment);
-  }
+    try {
+      return await firebaseService.addAppointment(appointment);
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      throw error;
+    }
+  },
 
   async update(id, appointment) {
-    return await firebaseService.updateAppointment(id, appointment);
-  }
+    try {
+      return await firebaseService.updateAppointment(id, appointment);
+    } catch (error) {
+      console.error('Error updating appointment:', error);
+      throw error;
+    }
+  },
 
   async delete(id) {
-    return await firebaseService.deleteAppointment(id);
+    try {
+      return await firebaseService.deleteAppointment(id);
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      throw error;
+    }
   }
-}
+};
 
-export default new AppointmentRepository();
+export default appointmentRepository;

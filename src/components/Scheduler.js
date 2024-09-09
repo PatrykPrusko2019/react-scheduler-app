@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
   Scheduler,
-  DayView,
-  WeekView,
   MonthView,
+  WeekView,
+  DayView,
   Appointments,
   AppointmentForm,
   AppointmentTooltip,
   Toolbar,
-  ViewSwitcher,
   DateNavigator,
+  ViewSwitcher,
   TodayButton,
-  EditingState,
-  IntegratedEditing,
 } from '@devexpress/dx-react-scheduler-material-ui';
+import { EditingState, ViewState } from '@devexpress/dx-react-scheduler';
 import appointmentService from '../services/appointmentService';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -21,48 +20,72 @@ import plLocale from 'date-fns/locale/pl';
 
 const SchedulerComponent = () => {
   const [appointments, setAppointments] = useState([]);
-  const [locale] = useState('pl-PL');
 
   useEffect(() => {
     const loadAppointments = async () => {
-      const data = await appointmentService.getAppointments();
-      setAppointments(data);
+      try {
+        const data = await appointmentService.getAppointments();
+        const convertedData = convertToDateObjects(data);
+        setAppointments(convertedData);
+      } catch (error) {
+        console.error('Błąd pobierania danych:', error);
+      }
     };
     loadAppointments();
   }, []);
 
   const commitChanges = async ({ added, changed, deleted }) => {
-    if (added) {
-      await appointmentService.addAppointment(added);
+    try {
+      if (added) {
+        const addedData = Object.values(added)[0]; // Pobierz dodane dane
+        await appointmentService.addAppointment(addedData);
+      }
+      if (changed) {
+        for (const [id, changes] of Object.entries(changed)) {
+          await appointmentService.updateAppointment(id, changes);
+        }
+      }
+      if (deleted) {
+        const idToDelete = Object.values(deleted)[0]; // Pobierz id do usunięcia
+        await appointmentService.deleteAppointment(idToDelete);
+      }
+      const data = await appointmentService.getAppointments();
+      const convertedData = convertToDateObjects(data);
+      setAppointments(convertedData);
+    } catch (error) {
+      console.error('Błąd podczas zapisywania zmian:', error);
     }
-    if (changed) {
-      const id = Object.keys(changed)[0];
-      await appointmentService.updateAppointment(id, changed[id]);
-    }
-    if (deleted) {
-      await appointmentService.removeAppointment(deleted);
-    }
-    const data = await appointmentService.getAppointments();
-    setAppointments(data);
+  };
+
+  const convertToDateObjects = (data) => {
+    return data.map(appointment => ({
+      ...appointment,
+      startDate: appointment.startDate.toDate(), // Konwertuj Timestamp na Date
+      endDate: appointment.endDate.toDate()      // Konwertuj Timestamp na Date
+    }));
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={plLocale}>
-      <Scheduler data={appointments} locale={locale}>
-        <EditingState onCommitChanges={commitChanges} />
-        <IntegratedEditing />
-        <DayView startDayHour={9} endDayHour={19} />
-        <WeekView startDayHour={9} endDayHour={19} />
-        <MonthView />
-        <Toolbar />
-        <DateNavigator />
-        <TodayButton />
-        <ViewSwitcher />
-        <Appointments />
-        <AppointmentTooltip showOpenButton showDeleteButton />
-        <AppointmentForm />
-      </Scheduler>
-    </LocalizationProvider>
+    {appointments.length > 0 ? (
+      <Scheduler data={appointments}>
+      <ViewState defaultCurrentDate={new Date()} />
+      <EditingState onCommitChanges={commitChanges} />
+      <DayView startDayHour={9} endDayHour={19} />
+      <WeekView startDayHour={9} endDayHour={19} />
+      <MonthView />
+      <Toolbar />
+      <DateNavigator />
+      <TodayButton />
+      <ViewSwitcher />
+      <Appointments />
+      <AppointmentTooltip showOpenButton showDeleteButton />
+      <AppointmentForm />
+    </Scheduler>
+    ) : (
+      <p>Ładowanie danych...</p>
+    )}
+  </LocalizationProvider>
   );
 };
 

@@ -1,24 +1,25 @@
-import appointmentRepository from '../repositories/appointmentRepository';
-import { validateAppointment } from '../models/Appointment';
+import { db } from '../config/firebaseConfig';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 
-class AppointmentService {
+const appointmentService = {
   async getAppointments() {
-    return await appointmentRepository.getAll();
-  }
+    const snapshot = await getDocs(collection(db, 'appointments'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  },
 
   async addAppointment(appointment) {
-    validateAppointment(appointment); // Walidacja modelu
-    await appointmentRepository.create(appointment);
-  }
+    await addDoc(collection(db, 'appointments'), appointment);
+  },
 
   async updateAppointment(id, appointment) {
-    validateAppointment(appointment);
-    await appointmentRepository.update(id, appointment);
-  }
+    const appointmentRef = doc(db, 'appointments', id);
+    await updateDoc(appointmentRef, appointment);
+  },
 
-  async removeAppointment(id) {
-    await appointmentRepository.delete(id);
+  async deleteAppointment(id) {
+    const appointmentRef = doc(db, 'appointments', id);
+    await deleteDoc(appointmentRef);
   }
-}
+};
 
-export default new AppointmentService();
+export default appointmentService;
