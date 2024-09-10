@@ -16,7 +16,7 @@ import { EditingState, ViewState } from '@devexpress/dx-react-scheduler';
 import appointmentService from '../services/appointmentService';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import plLocale from 'date-fns/locale/pl';
+import plLocale from 'date-fns/locale/pl'; // Import języka polskiego
 
 const SchedulerComponent = () => {
   const [appointments, setAppointments] = useState([]);
@@ -37,7 +37,7 @@ const SchedulerComponent = () => {
   const commitChanges = async ({ added, changed, deleted }) => {
     try {
       if (added) {
-        const addedData = Object.values(added)[0]; // Pobierz dodane dane
+        const addedData = { ...added }; // Pobierz dodane dane
         await appointmentService.addAppointment(addedData);
       }
       if (changed) {
@@ -46,8 +46,7 @@ const SchedulerComponent = () => {
         }
       }
       if (deleted) {
-        const idToDelete = Object.values(deleted)[0]; // Pobierz id do usunięcia
-        await appointmentService.deleteAppointment(idToDelete);
+        await appointmentService.deleteAppointment(deleted); // Pobierz ID do usunięcia
       }
       const data = await appointmentService.getAppointments();
       const convertedData = convertToDateObjects(data);
@@ -66,26 +65,26 @@ const SchedulerComponent = () => {
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={plLocale}>
-    {appointments.length > 0 ? (
-      <Scheduler data={appointments}>
-      <ViewState defaultCurrentDate={new Date()} />
-      <EditingState onCommitChanges={commitChanges} />
-      <DayView startDayHour={9} endDayHour={19} />
-      <WeekView startDayHour={9} endDayHour={19} />
-      <MonthView />
-      <Toolbar />
-      <DateNavigator />
-      <TodayButton />
-      <ViewSwitcher />
-      <Appointments />
-      <AppointmentTooltip showOpenButton showDeleteButton />
-      <AppointmentForm />
-    </Scheduler>
-    ) : (
-      <p>Ładowanie danych...</p>
-    )}
-  </LocalizationProvider>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={plLocale}> {/* Dodano adapterLocale */}
+      {appointments.length > 0 ? (
+        <Scheduler data={appointments}>
+          <ViewState defaultCurrentDate={new Date()} />
+          <EditingState onCommitChanges={commitChanges} />
+          <DayView startDayHour={9} endDayHour={19} />
+          <WeekView startDayHour={9} endDayHour={19} />
+          <MonthView />
+          <Toolbar />
+          <DateNavigator />
+          <TodayButton />
+          <ViewSwitcher />
+          <Appointments />
+          <AppointmentTooltip showOpenButton showDeleteButton />
+          <AppointmentForm />
+        </Scheduler>
+      ) : (
+        <p>Ładowanie danych...</p>
+      )}
+    </LocalizationProvider>
   );
 };
 
